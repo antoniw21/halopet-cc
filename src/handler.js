@@ -1,18 +1,6 @@
-const { admin, db } = require('./initialize');
+const { admin, db, bucket } = require('./initialize');
 
 const registerNewUserHandler = async (request, h) => {
-
-  // var uid = 'wbOs8m7sNybUztbFv4a7A5txuKn1';
-  // //hapus document user & pet
-  // const res = await db.collection('users').doc(uid).delete();
-  // const ederes = await db.collection('pets').doc(uid).delete();
-  // // hapus akun
-  // admin.auth()
-  //   .deleteUser(uid)
-  //   .then(() => {
-  //     console.log('Successfully deleted user');
-  //   })
-
   const { email, password, confirm_password } = request.payload;
 
   const createdAt = new Date().toISOString();
@@ -31,11 +19,22 @@ const registerNewUserHandler = async (request, h) => {
   }
 
   try {
+    // add user to authentication
     const userRecord = await admin.auth().createUser({
       email: email,
       password: password,
     });
-    uid = userRecord.uid;
+
+    // check whether user is created or not
+    if (typeof userRecord === 'undefined') {
+      const response = h.response({
+        status: 'fail',
+        message: 'Failed to created new user account!'
+      })
+      response.code(500);
+      return response;
+    }
+
     console.log('Successfully created new user:', userRecord.uid);
 
     // add user to firestore
@@ -74,6 +73,7 @@ const registerNewUserHandler = async (request, h) => {
     const addUserToFirestore = await db.collection('users').doc(`${userRecord.uid}`).set(newUser);
     const addPetToFirestore = await db.collection('pets').doc(`${userRecord.uid}`).set(newUserPet);
     const fotToFirestore = await db.collection('users').doc(`${userRecord.uid}`).collection('foto').doc('1').set(colFoto);
+    console.log('user added to firestore');
 
     const response = h.response({
       status: 'success',
