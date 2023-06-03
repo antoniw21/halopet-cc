@@ -54,13 +54,13 @@ const registerNewUserHandler = async (request, h) => {
     };
 
     const newUserPet = {
-      p_age: '',
-      p_birthday: '',
-      p_breed: '',
-      p_color: '',
-      p_height: '',
-      p_name: '',
-      p_weight: '',
+      age: '',
+      birthday: '',
+      breed: '',
+      color: '',
+      height: '',
+      name: '',
+      weight: '',
       createdAt: createdAt,
       updatedAt: updatedAt,
     };
@@ -114,4 +114,78 @@ const registerNewUserHandler = async (request, h) => {
   }
 }
 
-module.exports = { registerNewUserHandler }
+const getResultHandler = async (request, h) => {
+  const { id, id_doc } = request.params;
+
+  const foto = db.collection('users').doc(`${id}`).collection('foto').doc(`${id_doc}`);
+  const doc = await foto.get();
+  if (!doc.exists) {
+    console.log('No such document!');
+
+    const response = h.response({
+      status: 'fail',
+      message: 'No such document!!'
+    })
+    response.code(404);
+    return response;
+  } else {
+    console.log('Document data:', doc.data());
+
+    const {gambar, hasil} = doc.data()
+    console.log('Document data:', gambar);
+    console.log('Document data:', hasil);
+
+    const response = h.response({
+      status: 'success',
+      message: `Document found`,
+      data: {
+        gambar: gambar,
+        hasil: hasil
+      }
+    });
+    response.code(200);
+    return response;
+  }
+}
+
+const deleteImageHandler = async (request, h) => {
+  const { id, id_doc } = request.params;
+
+  // check in firebase storage
+  // ...
+
+  // check whether doc is exist or not
+  const foto = db.collection('users').doc(`${id}`).collection('foto').doc(`${id_doc}`);
+  const doc = await foto.get();
+  if (!doc.exists) {
+    console.log('No such document!');
+
+    const response = h.response({
+      status: 'fail',
+      message: 'No such document!!'
+    })
+    response.code(404);
+    return response;
+  }
+
+    console.log('Document available');
+
+  // delete doc
+  // https://firebase.google.com/docs/firestore/manage-data/delete-data?hl=en&authuser=0#delete_documents
+  const res = await db.collection('users').doc(`${id}`).collection('foto').doc(`${id_doc}`).delete();
+
+  // delete from firebase storage
+  // ...
+
+  const response = h.response({
+    status: 'success',
+    message: `Document successfully deleted`,
+  });
+  response.code(200);
+  return response;
+}
+
+module.exports = {
+  registerNewUserHandler,
+  getResultHandler,
+  deleteImageHandler }
