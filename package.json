@@ -4,7 +4,8 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "start": "node ./src/server.js",
+    "start-prod": "NODE_ENV=production node ./src/server.js",
+    "start-dev": "node ./src/server.js",
     "test": "nodemon ./src/server.js"
   },
   "keywords": [],
