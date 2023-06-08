@@ -67,14 +67,8 @@ const registerNewUserHandler = async (request, h) => {
       updatedAt: updatedAt,
     };
 
-    const colFoto = {
-      gambar: '',
-      hasil: '',
-    }
-
     const addUserToFirestore = await db.collection('users').doc(`${userRecord.uid}`).set(newUser);
     const addPetToFirestore = await db.collection('pets').doc(`${userRecord.uid}`).set(newUserPet);
-    const fotToFirestore = await db.collection('users').doc(`${userRecord.uid}`).collection('foto').doc('1').set(colFoto);
     console.log('user added to firestore');
 
     const response = h.response({
