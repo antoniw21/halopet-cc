@@ -167,17 +167,13 @@ const deleteImageHandler = async (request, h) => {
     // check in firebase storage
     // Lists files in the bucket
     var found = false;
-    var eks = null;
 
     const [files] = await bucket.getFiles();
     files.forEach(file => {
       const filepath = file.name;
-      const filewithouteks = path.join(path.dirname(filepath), path.basename(filepath, path.extname(filepath)));
-      console.log(filewithouteks);
-      if (filewithouteks === `${id}\\${id_doc}`) {
+      console.log(file.name);
+      if (file.name === `${id}/${id_doc}`) {
         found = true;
-        eks = path.extname(filepath)
-        console.log(eks);
         console.log(`${found}!, Image ${file.name} found`);
       }
     });
@@ -215,7 +211,7 @@ const deleteImageHandler = async (request, h) => {
 
     // delete from firebase storage:
     // delete object from bucket
-    await bucket.file(`${id}/${id_doc}${eks}`).delete();
+    await bucket.file(`${id}/${id_doc}`).delete();
     console.log(`success deleted image`);
 
     const response = h.response({
