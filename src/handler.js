@@ -123,7 +123,7 @@ const getListResultHandler = async (request, h) => {
 
       result.push(
         {
-          docid: {
+          [docid]: {
             gambar: gambar,
             uploadedAt: uploadedAt
           }
