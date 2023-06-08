@@ -7,7 +7,6 @@ const { getFirestore, Timestamp, FieldValue } = require('firebase-admin/firestor
 
 // https://firebase.google.com/docs/storage/admin/start?hl=id#use_a_default_bucket
 const { getStorage } = require('firebase-admin/storage');
-const init = require('./server');
 
 //Admin SDK configuration snippet
 var admin = require("firebase-admin");
