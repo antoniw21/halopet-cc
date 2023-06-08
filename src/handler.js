@@ -37,10 +37,10 @@ const registerNewUserHandler = async (request, h) => {
     }
 
     console.log('Successfully created new user:', userRecord.uid);
+    console.log('email: ', email);
 
     // add user to firestore
     const newUser = {
-      email: email,
       age: '',
       birthdate: '',
       city: '',
@@ -50,6 +50,7 @@ const registerNewUserHandler = async (request, h) => {
       name: '',
       phone: '',
       picture: '',
+      email: email,
       createdAt: createdAt,
       updatedAt: updatedAt,
     };
@@ -72,9 +73,9 @@ const registerNewUserHandler = async (request, h) => {
     }
 
     const addUserToFirestore = await db.collection('users').doc(`${userRecord.uid}`).set(newUser);
-    const addPetToFirestore = await db.collection('pets').doc(`${userRecord.uid}`).set(newUserPet);
-    const fotToFirestore = await db.collection('users').doc(`${userRecord.uid}`).collection('foto').doc('1').set(colFoto);
-    console.log('user added to firestore');
+    // const addPetToFirestore = await db.collection('pets').doc(`${userRecord.uid}`).set(newUserPet);
+    // const fotToFirestore = await db.collection('users').doc(`${userRecord.uid}`).collection('foto').doc('1').set(colFoto);
+    // console.log('user added to firestore');
 
     const response = h.response({
       status: 'success',
