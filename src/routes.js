@@ -1,6 +1,7 @@
 const { registerNewUserHandler,
-  getResultHandler,
+  getDetailResultHandler,
   deleteImageHandler,
+  getListResultHandler
 } = require("./handler");
 
 const routes = [
@@ -9,10 +10,15 @@ const routes = [
     path: '/register',
     handler: registerNewUserHandler,
   },
-  { // Hasil Analisis
+  { // List Hasil Analisis
+    method: 'GET',
+    path: '/image/{id}',
+    handler: getListResultHandler,
+  },
+  { // Detail Hasil Analisis
     method: 'GET',
     path: '/image/{id}/{id_doc}',
-    handler: getResultHandler,
+    handler: getDetailResultHandler,
   },
   { // History
     method: 'DELETE',

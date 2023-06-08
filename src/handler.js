@@ -45,7 +45,6 @@ const registerNewUserHandler = async (request, h) => {
       birthdate: '',
       city: '',
       email: '',
-      password: '',
       gender: '',
       name: '',
       phone: '',
@@ -110,7 +109,48 @@ const registerNewUserHandler = async (request, h) => {
   }
 }
 
-const getResultHandler = async (request, h) => {
+const getListResultHandler = async (request, h) => {
+  const { id } = request.params;
+
+  try {
+    const showresult = db.collection('users').doc(id).collection('foto');
+    const snapshot = await showresult.get();
+
+    const result = [];
+    snapshot.forEach(doc => {
+      const { gambar, uploadedAt } = doc.data()
+      const docid = doc.id
+
+      result.push(
+        {
+          docid: {
+            gambar: gambar,
+            uploadedAt: uploadedAt
+          }
+        }
+      );
+    });
+
+    const response = h.response({
+      status: 'success',
+      message: `Document successfully displayed.`,
+      data: result
+    });
+    response.code(200);
+    return response;
+
+  } catch (error) {
+    console.log(error);
+    const response = h.response({
+      status: 'fail',
+      message: `Failed to add new user!`,
+    });
+    response.code(500);
+    return response;
+  }
+}
+
+const getDetailResultHandler = async (request, h) => {
   const { id, id_doc } = request.params;
 
   try {
@@ -227,6 +267,7 @@ const deleteImageHandler = async (request, h) => {
 
 module.exports = {
   registerNewUserHandler,
-  getResultHandler,
+  getDetailResultHandler,
   deleteImageHandler,
+  getListResultHandler
 }
