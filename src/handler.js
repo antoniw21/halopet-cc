@@ -1,4 +1,5 @@
 const { admin, db, bucket } = require('./initialize');
+const path = require('path');
 
 const registerNewUserHandler = async (request, h) => {
   const { email, password, confirm_password } = request.payload;
@@ -117,33 +118,43 @@ const registerNewUserHandler = async (request, h) => {
 const getResultHandler = async (request, h) => {
   const { id, id_doc } = request.params;
 
-  const foto = db.collection('users').doc(`${id}`).collection('foto').doc(`${id_doc}`);
-  const doc = await foto.get();
-  if (!doc.exists) {
-    console.log('No such document!');
+  try {
+    const foto = db.collection('users').doc(`${id}`).collection('foto').doc(`${id_doc}`);
+    const doc = await foto.get();
+    if (!doc.exists) {
+      console.log('No such document!');
 
+      const response = h.response({
+        status: 'fail',
+        message: 'No such document!!'
+      })
+      response.code(404);
+      return response;
+    } else {
+      console.log('Document data:', doc.data());
+
+      const { gambar, hasil } = doc.data()
+      console.log('Document data:', gambar);
+      console.log('Document data:', hasil);
+
+      const response = h.response({
+        status: 'success',
+        message: `Document found`,
+        data: {
+          gambar: gambar,
+          hasil: hasil
+        }
+      });
+      response.code(200);
+      return response;
+    }
+
+  } catch (error) {
     const response = h.response({
       status: 'fail',
-      message: 'No such document!!'
+      message: `Error : ${error}!`
     })
-    response.code(404);
-    return response;
-  } else {
-    console.log('Document data:', doc.data());
-
-    const {gambar, hasil} = doc.data()
-    console.log('Document data:', gambar);
-    console.log('Document data:', hasil);
-
-    const response = h.response({
-      status: 'success',
-      message: `Document found`,
-      data: {
-        gambar: gambar,
-        hasil: hasil
-      }
-    });
-    response.code(200);
+    response.code(500);
     return response;
   }
 }
@@ -151,41 +162,80 @@ const getResultHandler = async (request, h) => {
 const deleteImageHandler = async (request, h) => {
   const { id, id_doc } = request.params;
 
-  // check in firebase storage
-  // ...
+  try {
+    // check in firebase storage
+    // Lists files in the bucket
+    var found = false;
+    var eks = null;
 
-  // check whether doc is exist or not
-  const foto = db.collection('users').doc(`${id}`).collection('foto').doc(`${id_doc}`);
-  const doc = await foto.get();
-  if (!doc.exists) {
-    console.log('No such document!');
+    const [files] = await bucket.getFiles();
+    files.forEach(file => {
+      const filepath = file.name;
+      const filewithouteks = path.join(path.dirname(filepath), path.basename(filepath, path.extname(filepath)));
+      console.log(filewithouteks);
+      if (filewithouteks === `${id}\\${id_doc}`) {
+        found = true;
+        eks = path.extname(filepath)
+        console.log(eks);
+        console.log(`${found}!, Image ${file.name} found`);
+      }
+    });
 
-    const response = h.response({
-      status: 'fail',
-      message: 'No such document!!'
-    })
-    response.code(404);
-    return response;
-  }
+    console.log(found);
+
+    if (!found) {
+      const response = h.response({
+        status: 'fail',
+        message: 'No such image!!'
+      })
+      response.code(404);
+      return response;
+    }
+
+    // check whether doc is exist or not
+    const foto = db.collection('users').doc(`${id}`).collection('foto').doc(`${id_doc}`);
+    const doc = await foto.get();
+    if (!doc.exists) {
+      console.log('No such document!');
+
+      const response = h.response({
+        status: 'fail',
+        message: 'No such document!!'
+      })
+      response.code(404);
+      return response;
+    }
 
     console.log('Document available');
 
-  // delete doc
-  // https://firebase.google.com/docs/firestore/manage-data/delete-data?hl=en&authuser=0#delete_documents
-  const res = await db.collection('users').doc(`${id}`).collection('foto').doc(`${id_doc}`).delete();
+    // delete doc
+    // https://firebase.google.com/docs/firestore/manage-data/delete-data?hl=en&authuser=0#delete_documents
+    const res = await db.collection('users').doc(`${id}`).collection('foto').doc(`${id_doc}`).delete();
 
-  // delete from firebase storage
-  // ...
+    // delete from firebase storage:
+    // delete object from bucket
+    await bucket.file(`${id}/${id_doc}${eks}`).delete();
+    console.log(`success deleted image`);
 
-  const response = h.response({
-    status: 'success',
-    message: `Document successfully deleted`,
-  });
-  response.code(200);
-  return response;
+    const response = h.response({
+      status: 'success',
+      message: `Document successfully deleted`,
+    });
+    response.code(200);
+    return response;
+
+  } catch (error) {
+    const response = h.response({
+      status: 'fail',
+      message: `Error: ${error}!`,
+    });
+    response.code(500);
+    return response;
+  }
 }
 
 module.exports = {
   registerNewUserHandler,
   getResultHandler,
-  deleteImageHandler }
+  deleteImageHandler,
+}

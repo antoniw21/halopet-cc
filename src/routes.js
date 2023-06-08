@@ -1,6 +1,7 @@
 const { registerNewUserHandler,
   getResultHandler,
-  deleteImageHandler} = require("./handler");
+  deleteImageHandler,
+} = require("./handler");
 
 const routes = [
   { // Register
