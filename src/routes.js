@@ -1,7 +1,12 @@
 const { registerNewUserHandler,
   getDetailResultHandler,
   deleteImageHandler,
-  getListResultHandler
+  getListResultHandler,
+  //
+  getHomeProfileById,
+  addSkinImage,
+  getDetailProfileById,
+  editProfileById
 } = require("./handler");
 
 const routes = [
@@ -25,6 +30,27 @@ const routes = [
     path: '/image/{id}/{id_doc}',
     handler: deleteImageHandler,
   },
+  //
+  {
+    method: 'GET',
+    path: '/home/{id}',
+    handler: getHomeProfileById,
+  },
+  {
+    method: 'POST',
+    path: '/image/{id}',
+    handler: addSkinImage,
+  },
+  {
+    method: 'GET',
+    path: '/profile/{id}',
+    handler: getDetailProfileById,
+  },
+  {
+    method: 'PUT',
+    path: '/profile/{id}',
+    handler: editProfileById,
+  }
 ]
 
 module.exports = routes;

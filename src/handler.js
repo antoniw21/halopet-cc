@@ -1,5 +1,6 @@
 const { admin, db, bucket } = require('./initialize');
 const path = require('path');
+const { nanoid } = require('nanoid');
 
 const registerNewUserHandler = async (request, h) => {
   const { email, password, confirm_password } = request.payload;
@@ -265,9 +266,308 @@ const deleteImageHandler = async (request, h) => {
   }
 }
 
+//
+
+const getHomeProfileById = async (request, h) => {
+  // show summary user profile (user's name, pet's name)
+  const { id } = request.params
+  const docRef1 = db.collection('users');
+  const docRef2 = db.collection('pets');
+
+  try {
+    const [doc1, doc2] = await Promise.all([
+      docRef1.doc(id).get(),
+      docRef2.doc(id).get(),
+    ]);
+
+    if (!doc1.exists || !doc2.exists) {
+      console.log('No such document!');
+      const response = h.response({
+        status: 'fail',
+        message: 'Data not found!',
+      });
+      response.code(404);
+      return response;
+    }
+
+    var username = doc1.get('name');
+    if (username === '') {
+      username = doc1.get('email');
+    }
+    console.log(username);
+
+    var petname = doc2.get('name')
+    if (!petname) {
+      petname = 'complete your profile'
+    }
+    console.log(petname);
+
+    const response = h.response({
+      status: 'success',
+      message: 'Data found',
+      data: {
+        username: username,
+        petname: petname
+      }
+    });
+    response.code(200);
+    return response;
+
+  } catch (error) {
+    console.error('Error getting document: ', error);
+    const response = h.response({
+      status: 'fail',
+      message: `Error: ${error}`
+    });
+    response.code(500);
+    return response;
+  }
+};
+
+const addSkinImage = async (request, h) => {
+  // add skin diseases image for further analysis
+  const { id } = request.params;
+  const { filename } = request.payload;
+
+  console.log(filename);
+
+  try {
+    // rename filename with nanoid.file extension
+    // use nanoid as id_doc and storage file name
+    const fileid = nanoid(7);
+
+    const filePath = `./${filename}` //input file
+
+    // extract the extension file to variable file_eks
+    const file_eks = path.extname(filename);
+    console.log(file_eks);
+
+    // new file name
+    const file_doc_id = `${fileid}${file_eks}`;
+    console.log(file_doc_id);
+
+    const destFileName = `${id}/${file_doc_id}`;
+    const options = {
+      destination: destFileName,
+    }
+
+    // Upload to storage
+    await bucket.upload(filePath, options);
+
+    const uploadedAt = new Date().toLocaleString()
+    console.log(`${filePath} uploaded at ${uploadedAt}`);
+
+    // get image link
+    const url = await bucket.file(destFileName).getSignedUrl({
+      action: 'read',
+      expires: '03-01-2500',
+    });
+
+    const link = `${url[0]}`;
+    console.log(link);
+
+    // upload foto ke model ML
+    // ...
+
+    // dapetin hasil prediksi dan di simpan di variabel hasil
+    // ...
+    const hasil = '[1,0,0] sebagai contoh hasil prediksi';
+
+    const colFoto = {
+      gambar: link,
+      hasil: hasil,
+      uploadedAt: uploadedAt
+    }
+
+    const storeImage = await db.collection('users').doc(id).collection('foto').doc(file_doc_id).set(colFoto);
+    console.log('Image stored!');
+
+    const response = h.response({
+      status: 'success',
+      message: 'Image uploaded!',
+    });
+    response.code(201);
+    return response;
+
+  } catch (error) {
+    console.error("Error storing image:", error);
+    const response = h.response({
+      status: 'fail',
+      message: `Image failed to upload, ${error}`
+    });
+    response.code(500);
+    return response;
+  }
+};
+
+const getDetailProfileById = async (request, h) => {
+  // show detail user's profile(profile page)
+  const { id } = request.params;
+  const collection1Ref = db.collection('users');
+  const collection2Ref = db.collection('pets');
+
+  try {
+    const [doc1, doc2] = await Promise.all([
+      collection1Ref.doc(id).get(),
+      collection2Ref.doc(id).get(),
+    ]);
+
+    if (!doc1.exists || !doc2.exists) {
+      console.log('No such document!');
+      const response = h.response({
+        status: 'error',
+        message: `Document not found!`,
+      });
+      response.code(404);
+      return response;
+    }
+
+    const data1 = doc1.data();
+    const data2 = doc2.data();
+
+    console.log('Data user:', data1);
+    console.log('Data pet:', data2);
+
+    // user's data
+    const {
+      createdAt,
+      birthdate,
+      gender,
+      city,
+      phone,
+      age,
+      email,
+      picture,
+      updatedAt,
+      name
+    } = data1
+
+    // pet's data
+    const {
+      birthday: p_birthday,
+      color: p_color,
+      weight: p_weight,
+      age: p_age,
+      breed: p_breed,
+      height: p_height,
+      name: p_name
+    } = data2
+
+    const response = h.response({
+      status: 'success',
+      message: 'Data available',
+      data: {
+        user: {
+          birthdate: birthdate,
+          gender: gender,
+          city: city,
+          phone: phone,
+          age: age,
+          email: email,
+          picture: picture,
+          name: name,
+          createdAt: createdAt,
+          updatedAt: updatedAt
+        },
+        pet: {
+          birthday: p_birthday,
+          color: p_color,
+          weight: p_weight,
+          age: p_age,
+          breed: p_breed,
+          height: p_height,
+          name: p_name
+        }
+      }
+    });
+    response.code(200);
+    return response;
+
+  } catch (error) {
+    console.error('Error getting documents: ', error);
+    const response = h.response({
+      status: 'error',
+      message: `${error}`,
+    });
+    response.code(500);
+    return response;
+  }
+};
+
+const editProfileById = async (request, h) => {
+  // mengubah data profile (user & pet)
+  const {
+    birthdate,
+    gender,
+    city,
+    phone,
+    age,
+    picture,
+    name,
+    p_birthday,
+    p_color,
+    p_weight,
+    p_age,
+    p_breed,
+    p_height,
+    p_name
+  } = request.payload;
+  const { id } = request.params;
+  const updatedAt = new Date().toISOString();
+
+  try {
+    const docRef = db.collection('users').doc(id);
+    const doc2Ref = db.collection('pets').doc(id);
+
+    // update for user
+    const updateuser = await docRef.update({
+      birthdate: birthdate,
+      gender: gender,
+      city: city,
+      phone: phone,
+      age: age,
+      picture: picture,
+      name: name,
+      updatedAt: updatedAt
+    }, { ignoreUndefinedProperties: true });
+
+    const updatepet = await doc2Ref.update({
+      birthday: p_birthday,
+      color: p_color,
+      weight: p_weight,
+      age: p_age,
+      breed: p_breed,
+      height: p_height,
+      name: p_name,
+      updatedAt: updatedAt
+    }, { ignoreUndefinedProperties: true });
+
+    const response = h.response({
+      status: 'success',
+      message: `Data updated successfully`,
+    });
+    response.code(201);
+    return response;
+
+  } catch (error) {
+    console.log(error)
+    const response = h.response({
+      status: 'fail',
+      message: `${error}`,
+    });
+    response.code(500);
+    return response;
+  }
+};
+
 module.exports = {
   registerNewUserHandler,
   getDetailResultHandler,
   deleteImageHandler,
-  getListResultHandler
+  getListResultHandler,
+  //
+  getHomeProfileById,
+  addSkinImage,
+  getDetailProfileById,
+  editProfileById
 }
