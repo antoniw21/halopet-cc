@@ -6,6 +6,11 @@ const init = async () => {
   const server = Hapi.server({
       port: process.env.PORT,
       host: process.env.NODE_ENV !== process.env.CODE ? `${process.env.HOST}` : `${process.env.OTHER}`,
+      routes: {
+        cors: {
+          origin: ['*'],
+        },
+      },
   });
 
   server.route(routes);
