@@ -21,7 +21,7 @@ const predictHandler = async (imagePath) => {
     const modelArchitecture = await readFile(modelPath, 'utf8');
 
     // Create a new model from the loaded architecture
-    const model = await tf.loadLayersModel(
+    const model = await tf.loadGraphModel(
       tf.io.fromMemory(modelArchitecture)
     );
 
