@@ -1,6 +1,7 @@
 const { admin, db, bucket } = require('./initialize');
 const path = require('path');
 const { nanoid } = require('nanoid');
+const loadModelAndMakePredictions = require('./ml');
 
 const registerNewUserHandler = async (request, h) => {
   const { email, password, confirm_password } = request.payload;
@@ -366,12 +367,8 @@ const addSkinImage = async (request, h) => {
     const link = `${url[0]}`;
     console.log(link);
 
-    // upload foto ke model ML
-    // ...
-
-    // dapetin hasil prediksi dan di simpan di variabel hasil
-    // ...
-    const hasil = '[1,0,0] sebagai contoh hasil prediksi';
+    // call ml handler and get prediction
+    const hasil = await loadModelAndMakePredictions(filePath);
 
     const colFoto = {
       gambar: link,
