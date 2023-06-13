@@ -1,7 +1,8 @@
+require('dotenv').config();
 const { admin, db, bucket } = require('./initialize');
 const path = require('path');
 const { nanoid } = require('nanoid');
-const loadModelAndMakePredictions = require('./ml');
+// const loadModelAndMakePredictions = require('./ml');
 
 const registerNewUserHandler = async (request, h) => {
   const { email, password, confirm_password } = request.payload;
@@ -206,7 +207,6 @@ const deleteImageHandler = async (request, h) => {
 
     const [files] = await bucket.getFiles();
     files.forEach(file => {
-      const filepath = file.name;
       console.log(file.name);
       if (file.name === `${id}/${id_doc}`) {
         found = true;
@@ -328,62 +328,146 @@ const getHomeProfileById = async (request, h) => {
 const addSkinImage = async (request, h) => {
   // add skin diseases image for further analysis
   const { id } = request.params;
-  const { filename } = request.payload;
-
-  console.log(filename);
+  const data = request.payload;
 
   try {
     // rename filename with nanoid.file extension
     // use nanoid as id_doc and storage file name
     const fileid = nanoid(7);
+    console.log(fileid);
 
-    const filePath = `./${filename}` //input file
 
-    // extract the extension file to variable file_eks
-    const file_eks = path.extname(filename);
-    console.log(file_eks);
 
-    // new file name
-    const file_doc_id = `${fileid}${file_eks}`;
-    console.log(file_doc_id);
 
-    const destFileName = `${id}/${file_doc_id}`;
-    const options = {
-      destination: destFileName,
+
+
+
+
+    // const { Storage } = require('@google-cloud/storage');
+
+    // const storage = new Storage();
+    // const bucketName = 'c23-pr490.appspot.com'; // Ganti dengan nama bucket Cloud Storage Anda
+
+    // if (data.file) {
+    //   const name = data.file.hapi.filename;
+    //   const destination = `${id}/${name}`;
+
+    //   const bucket = storage.bucket(bucketName);
+    //   const fileUpload = bucket.file(destination);
+
+    //   data.file.pipe(fileUpload.createWriteStream())
+    //     .on('error', (err) => {
+    //       console.error(err);
+    //     })
+    //     .on('finish', () => {
+    //       const ret = {
+    //         filename: name,
+    //         headers: data.file.hapi.headers,
+    //         storageLocation: `gs://${bucketName}/${destination}`
+    //       };
+    //       console.log('File uploaded successfully!');
+    //       console.log(`Storage location: gs://${bucketName}/${destination}`);
+    //       const res = JSON.stringify(ret);
+
+    //       const response = h.response({
+    //         status: 'success',
+    //         message: 'Image uploaded!',
+    //         data: {
+    //           res
+    //         }
+    //       });
+    //       response.code(201);
+    //       return response;
+    //     });
+    // }
+
+
+
+
+
+
+
+
+
+    if (data.file) {
+      const name = data.file.hapi.filename;
+      const destination = id + '/' + fileid + '.' + data.file.hapi.filename.split('.').pop();
+      console.log(destination);
+
+      const fileUpload = bucket.file(destination);
+
+      data.file.pipe(fileUpload.createWriteStream())
+        .on('error', (err) => {
+          console.error(err);
+          const response = h.response({
+            status: 'fail',
+            message: `Image failed to upload, ${error}`
+          });
+          response.code(500);
+          return response;
+        })
+        .on('finish', async () => {
+          const ret = {
+            filename: name,
+            headers: data.file.hapi.headers,
+            storageLocation: `gs://${process.env.BUCKET}/${id}/${destination}`
+          };
+          console.log('File uploaded successfully!');
+          console.log(`Storage location: gs://${bucketName}/${destination}`);
+
+          const uploadedAt = new Date().toLocaleString()
+          console.log(`${destination} uploaded at ${uploadedAt}`);
+
+          const destFileName = '${id}/${destination}';
+          // get image link
+          const url = await bucket.file(destFileName).getSignedUrl({
+            action: 'read',
+            expires: '03-01-2500',
+          });
+
+          const link = `${url[0]}`;
+          console.log(link);
+
+          const res = JSON.stringify(ret);
+
+          const response = h.response({
+            status: 'success',
+            message: 'Image uploaded!',
+            data: {
+              res
+            }
+          });
+          response.code(201);
+          return response;
+        });
     }
 
-    // Upload to storage
-    await bucket.upload(filePath, options);
+    // const destFileName = `${id}/${file_doc_id}`;
+    // const options = {
+    //   destination: destFileName,
+    // }
 
-    const uploadedAt = new Date().toLocaleString()
-    console.log(`${filePath} uploaded at ${uploadedAt}`);
+    // // Upload to storage
+    // await bucket.upload(filePath, options);
 
-    // get image link
-    const url = await bucket.file(destFileName).getSignedUrl({
-      action: 'read',
-      expires: '03-01-2500',
-    });
-
-    const link = `${url[0]}`;
-    console.log(link);
 
     // call ml handler and get prediction
-    const hasil = await loadModelAndMakePredictions(filePath);
+    // const hasil = await loadModelAndMakePredictions(filePath);
 
-    const colFoto = {
-      gambar: link,
-      hasil: hasil,
-      uploadedAt: uploadedAt
-    }
+    // const colFoto = {
+    //   gambar: link,
+    //   hasil: hasil,
+    //   uploadedAt: uploadedAt
+    // }
 
-    const storeImage = await db.collection('users').doc(id).collection('foto').doc(file_doc_id).set(colFoto);
-    console.log('Image stored!');
+    // const storeImage = await db.collection('users').doc(id).collection('foto').doc(file_doc_id).set(colFoto);
+    // console.log('Image stored!');
 
     const response = h.response({
-      status: 'success',
-      message: 'Image uploaded!',
+      status: 'fail',
+      message: `Image not found!`
     });
-    response.code(201);
+    response.code(404);
     return response;
 
   } catch (error) {

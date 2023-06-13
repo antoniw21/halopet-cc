@@ -40,6 +40,14 @@ const routes = [
     method: 'POST',
     path: '/image/{id}',
     handler: addSkinImage,
+    options: {
+      payload: {
+        output: 'stream',
+        parse: true,
+        allow: 'multipart/form-data',
+        multipart: true
+      }
+    }
   },
   {
     method: 'GET',
