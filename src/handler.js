@@ -389,58 +389,66 @@ const addSkinImage = async (request, h) => {
 
 
 
-    if (data.file) {
-      const name = data.file.hapi.filename;
-      const destination = id + '/' + fileid + '.' + data.file.hapi.filename.split('.').pop();
-      console.log(destination);
-
-      const fileUpload = bucket.file(destination);
-
-      data.file.pipe(fileUpload.createWriteStream())
-        .on('error', (err) => {
-          console.error(err);
-          const response = h.response({
-            status: 'fail',
-            message: `Image failed to upload, ${error}`
-          });
-          response.code(500);
-          return response;
-        })
-        .on('finish', async () => {
-          const ret = {
-            filename: name,
-            headers: data.file.hapi.headers,
-            storageLocation: `gs://${process.env.BUCKET}/${id}/${destination}`
-          };
-          console.log('File uploaded successfully!');
-          console.log(`Storage location: gs://${bucketName}/${destination}`);
-
-          const uploadedAt = new Date().toLocaleString()
-          console.log(`${destination} uploaded at ${uploadedAt}`);
-
-          const destFileName = '${id}/${destination}';
-          // get image link
-          const url = await bucket.file(destFileName).getSignedUrl({
-            action: 'read',
-            expires: '03-01-2500',
-          });
-
-          const link = `${url[0]}`;
-          console.log(link);
-
-          const res = JSON.stringify(ret);
-
-          const response = h.response({
-            status: 'success',
-            message: 'Image uploaded!',
-            data: {
-              res
-            }
-          });
-          response.code(201);
-          return response;
-        });
+    if (!data.file) {
+      const response = h.response({
+        status: 'fail',
+        message: `Image not found!`
+      });
+      response.code(404);
+      return response;
     }
+
+    const name = data.file.hapi.filename;
+    const destination = id + '/' + fileid + '.' + data.file.hapi.filename.split('.').pop();
+    console.log(destination);
+
+    const fileUpload = bucket.file(destination);
+
+    data.file.pipe(fileUpload.createWriteStream())
+      .on('error', (err) => {
+        console.error(err);
+        const response = h.response({
+          status: 'fail',
+          message: `Image failed to upload, ${error}`
+        });
+        response.code(500);
+        return response;
+      })
+      .on('finish', async () => {
+        const ret = {
+          filename: name,
+          headers: data.file.hapi.headers,
+          storageLocation: `gs://${process.env.BUCKET}/${id}/${destination}`
+        };
+        console.log('File uploaded successfully!');
+        console.log(`Storage location: gs://${bucketName}/${destination}`);
+
+        const uploadedAt = new Date().toLocaleString()
+        console.log(`${destination} uploaded at ${uploadedAt}`);
+
+        const destFileName = '${id}/${destination}';
+        // get image link
+        const url = await bucket.file(destFileName).getSignedUrl({
+          action: 'read',
+          expires: '03-01-2500',
+        });
+
+        const link = `${url[0]}`;
+        console.log(link);
+
+        const res = JSON.stringify(ret);
+
+        const response = h.response({
+          status: 'success',
+          message: 'Image uploaded!',
+          data: {
+            res
+          }
+        });
+        response.code(201);
+        return response;
+      });
+
 
     // const destFileName = `${id}/${file_doc_id}`;
     // const options = {
@@ -463,12 +471,7 @@ const addSkinImage = async (request, h) => {
     // const storeImage = await db.collection('users').doc(id).collection('foto').doc(file_doc_id).set(colFoto);
     // console.log('Image stored!');
 
-    const response = h.response({
-      status: 'fail',
-      message: `Image not found!`
-    });
-    response.code(404);
-    return response;
+
 
   } catch (error) {
     console.error("Error storing image:", error);
