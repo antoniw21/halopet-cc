@@ -408,7 +408,7 @@ const addSkinImage = async (request, h) => {
     console.log(link);
 
     // call ml handler and get prediction
-    const hasil = await loadModelAndMakePredictions(`uploads/${file_doc_id}`);
+    const hasil = await loadModelAndMakePredictions(`src/uploads/${file_doc_id}`);
     console.log(hasil);
 
     const colFoto = {
