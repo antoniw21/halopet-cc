@@ -1,6 +1,7 @@
 const { admin, db, bucket } = require('./initialize');
 const path = require('path');
 const { nanoid } = require('nanoid');
+const fs = require('fs');
 const loadModelAndMakePredictions = require('./ml');
 
 const registerNewUserHandler = async (request, h) => {
@@ -346,10 +347,37 @@ const addSkinImage = async (request, h) => {
       return response;
     }
 
-    const name = data.data.hapi.filename;
-    const destination = id + '/' + fileid + '.' + name.split('.').pop();
+    const destination = id + '/' + fileid + '.' + filename.split('.').pop();
+    const file_doc_id = fileid + '.' + filename.split('.').pop();
     console.log(destination);
 
+    // upload to local 'uploads' directory
+    const uploadLocal = __dirname + '/uploads/' + file_doc_id;
+    fs.mkdirSync(__dirname + '/uploads', { recursive: true });
+
+    const file = fs.createWriteStream(uploadLocal);
+
+    file.on('error', (err) => {
+      console.error(err)
+      const response = h.response({
+        status: 'fail',
+        message: `in try: ${err}`
+      });
+      response.code(500);
+      return response;
+    });
+
+    data.data.pipe(file);
+
+    file.on('finish', (err) => {
+      const ret = {
+        filename: filename,
+        headers: data.data.hapi.headers
+      }
+      console.log(JSON.stringify(ret));
+    })
+
+    // upload to firebase storage
     const fileUpload = bucket.file(destination);
 
     data.data.pipe(fileUpload.createWriteStream())
@@ -380,7 +408,7 @@ const addSkinImage = async (request, h) => {
     console.log(link);
 
     // call ml handler and get prediction
-    const hasil = await loadModelAndMakePredictions(link);
+    const hasil = await loadModelAndMakePredictions(`uploads/${file_doc_id}`);
     console.log(hasil);
 
     const colFoto = {
