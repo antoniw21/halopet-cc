@@ -2,6 +2,7 @@ const { admin, db, bucket } = require('./initialize');
 const path = require('path');
 const { nanoid } = require('nanoid');
 const fs = require('fs');
+const fs_ex = require('fs-extra');
 const loadModelAndMakePredictions = require('./ml');
 
 const registerNewUserHandler = async (request, h) => {
@@ -411,6 +412,18 @@ const addSkinImage = async (request, h) => {
     const hasil = await loadModelAndMakePredictions(`src/uploads/${file_doc_id}`);
     console.log(hasil);
 
+    // delete local stored image
+    const filePath = `src/uploads/${file_doc_id}`;
+
+    fs_ex.remove(filePath)
+      .then(() => {
+        console.log('File deleted successfully.');
+      })
+      .catch((error) => {
+        console.error('Error deleting file:', error);
+      });
+
+    //upload to firebase storage
     const colFoto = {
       gambar: link,
       hasil: hasil,
