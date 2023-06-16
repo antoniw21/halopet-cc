@@ -105,7 +105,7 @@ pm2 start npm --name "your-project" -- run "start-prod"
 |`POST`  |`/register`           |Create new user                 |
 |`GET`   |`/home/{id}`          |Show user's data in home section|
 |`GET`   |`/profile/{id}`       |Show all of user's data         |
-|`PUT`   |`/profile/{id}`       |Change user's data              |
+|`PUT`   |`/profile/{id}`       |Update user's data              |
 |`GET`   |`/image/{id}`         |Show all of analysis history    |
 |`POST`  |`/image/{id}`         |Upload photo for prediction     |
 |`GET`   |`/image/{id}/{id_doc}`|Show detail of analysis history |
