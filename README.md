@@ -100,16 +100,16 @@ pm2 start npm --name "your-project" -- run "start-prod"
 
 ## API Documentation
 
-| Method | Endpoint  | Description |
-|--------|-----------|-------------|
-|`POST`|`/register`|Create new user|
-|`GET`|`/image/{id}/{id_doc}`|Show all analysis history|
-|`DELETE`|`/image/{id}/{id_doc}`|Delete analysis history|
-|`GET`|`/home/{id}`|Show user's data in home section|
-|`POST`|`/image/{id}`|Upload photo for prediction|
-|`GET`|`/profile/{id}`|Show all of user's data|
-|`PUT`|`/profile/{id}`|Change user's data|
-|`GET`|`/image/{id}`|Show all of analysis history|
+| Method | Endpoint             | Description                    |
+|--------|----------------------|--------------------------------|
+|`POST`  |`/register`           |Create new user                 |
+|`GET`   |`/home/{id}`          |Show user's data in home section|
+|`GET`   |`/profile/{id}`       |Show all of user's data         |
+|`PUT`   |`/profile/{id}`       |Change user's data              |
+|`GET`   |`/image/{id}`         |Show all of analysis history    |
+|`POST`  |`/image/{id}`         |Upload photo for prediction     |
+|`GET`   |`/image/{id}/{id_doc}`|Show detail of analysis history |
+|`DELETE`|`/image/{id}/{id_doc}`|Delete analysis history         |
 
 For details, please check our postman API documentation:
 (<https://documenter.getpostman.com/view/22799311/2s93shy9PT#4e026764-8c31-4a30-8027-844eb980cc5f>)
