@@ -435,7 +435,8 @@ const addSkinImage = async (request, h) => {
 
     const response = h.response({
       status: 'success',
-      message: `Image uploaded, id document: ${file_doc_id}`,
+      message: `Image uploaded`,
+      id: `${file_doc_id}`
     });
     response.code(201);
     return response;
