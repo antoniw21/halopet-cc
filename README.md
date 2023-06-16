@@ -21,13 +21,13 @@ This repository contains back-end source code for handle our application request
 
 ## Features
 
-- Regiter new user
+- Register new user
 - Upload image and get prediction
-- Show home
+- Show home page
 - Show user's profile
 - Show list of analysis history
 - Show detail of analysis history
-- Change user's profile
+- Update user's profile
 - Delete analysis history
 
 ## Installation
